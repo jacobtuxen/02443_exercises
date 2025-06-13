@@ -1,6 +1,7 @@
 import numpy as np
 import heapq
 import scipy.stats as st
+from tqdm import tqdm
 
 class BlockingSystem:
     def __init__(self, arrival_mode='poisson', predfined_random_numbers=None):
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     NUM_RUNS = 30
     blocking_fractions_diff_cr = []
     blocking_fractions_diff_ncr = []
-    for _ in range(NUM_RUNS):
+    for _ in tqdm(range(NUM_RUNS), desc="Running simulations"):
         U = np.random.uniform(0, 1, 300000)
         theta1 = BlockingSystem(arrival_mode='poisson')
         num_blocked_1, num_served_1 = theta1.simulate()
