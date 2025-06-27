@@ -24,7 +24,7 @@ class BlockingSystem:
             return self.mean_service_time
         elif self.service_distribution == 'pareto':
             k = self.k
-            beta = (k-1)/k #mean = 1
+            beta = self.mean_service_time*(k-1)/k
             return pareto_distribution(samples=1, beta=beta, k=k)[0]
         elif self.service_distribution == 'gamma':
             shape = 2

@@ -24,7 +24,10 @@ if __name__ == "__main__":
     bootstrap_samples = bootstrap(data, n_iterations=100, sample_size=N)
     bootstrap_means = np.mean(bootstrap_samples, axis=1)
     bootstrap_medians = np.median(bootstrap_samples, axis=1)
-
+    var_bootstrap_means = np.var(bootstrap_means)
+    var_bootstrap_medians = np.var(bootstrap_medians)
+    print(f"Variance of bootstrap means: {var_bootstrap_means}")
+    print(f"Variance of bootstrap medians: {var_bootstrap_medians}")
     import matplotlib.pyplot as plt
     plt.hist(bootstrap_means, bins=30, alpha=0.5, label='Bootstrap Means')
     plt.hist(bootstrap_medians, bins=30, alpha=0.5, label='Bootstrap Medians')

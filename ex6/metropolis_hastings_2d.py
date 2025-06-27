@@ -7,7 +7,7 @@ from scipy.stats import chisquare
 # Global constants
 A1, A2 = 4, 4
 m = 10
-c = 1  # Will normalize later
+c = 1
 
 def joint_prob(i, j):
     if i < 0 or j < 0 or i + j > m:

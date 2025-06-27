@@ -12,10 +12,9 @@ def antithetic_variables_estimator(samples = 100):
 
 def control_variable_estimator(samples):
     U = np.random.uniform(0, 1, samples)
-    # Y = np.exp(U)
-    Y = -np.log(U)
+    Y = np.exp(U)
+    # Y = -np.log(U)
     c = -np.cov(Y, U)[0, 1] / np.var(U)
-    breakpoint()
     return np.mean(Y + c * (U - 0.5))
 
 def stratified_sampling_estimator(samples = 100):
@@ -28,7 +27,7 @@ def stratified_sampling_estimator(samples = 100):
 
 if __name__ == "__main__":
     samples = 100  # Number of samples per estimate
-    n_repeats = 1000  # Number of repetitions to compute CI
+    n_repeats = 10  # Number of repetitions to compute CI
     confidence_level = 0.95
     z_score = norm.ppf((1 + confidence_level) / 2)  # 1.96 for 95% CI
 
@@ -38,13 +37,12 @@ if __name__ == "__main__":
     control_estimates = np.zeros(n_repeats)
     stratified_estimates = np.zeros(n_repeats)
 
-    # Run each estimator multiple times
+    # # Run each estimator multiple times
     for i in range(n_repeats):
-        mc_estimates[i] = monte_carlo_estimator(samples)
-        antithetic_estimates[i] = antithetic_variables_estimator(samples)
-        control_estimates[i] = control_variable_estimator(samples)
-        stratified_estimates[i] = stratified_sampling_estimator(samples)
-
+      mc_estimates[i] = monte_carlo_estimator(samples)
+      antithetic_estimates[i] = antithetic_variables_estimator(samples)
+      control_estimates[i] = control_variable_estimator(samples)
+      stratified_estimates[i] = stratified_sampling_estimator(samples)    
     # Compute mean and standard error for each estimator
     estimators = [
         ("Monte Carlo", mc_estimates),
@@ -54,7 +52,7 @@ if __name__ == "__main__":
     ]
 
     print(f"True value of E[e^U]: {np.exp(1) - 1:.6f}")
-    print(f"Confidence Intervals (95%) with {samples} samples per estimate, {n_repeats} repetitions:\n")
+    print(f"Confidence Intervals (95%) with {samples} samples per estimate")
 
     for name, estimates in estimators:
         mean_estimate = np.mean(estimates)

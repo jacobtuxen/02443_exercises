@@ -27,16 +27,55 @@ def acceptance_probability(current_cost, new_cost, temp):
 def temperature_schedule(iteration, initial_temp=1000):
     return 1/np.sqrt(iteration + 1) * initial_temp
 
-def simulated_annealing(tsp_matrix, initial_temp=0.1, max_iterations=10000):
+# def simulated_annealing(tsp_matrix, initial_temp=0.1, max_iterations=10000):
+#     n = tsp_matrix.shape[0]
+#     current_solution = np.random.permutation(n-1) + 1
+#     #make it start and end at 0
+#     temp = np.insert(current_solution, 0, 0)  # Start at node 0
+#     temp = np.append(current_solution, 0)  # End at node 0
+#     current_cost = calculate_cost(temp, tsp_matrix)
+
+#     best_solution = np.copy(current_solution)
+#     best_cost = current_cost
+
+#     temp = temperature_schedule(0, initial_temp)
+
+#     for iteration in range(max_iterations):
+#         if temp <= 1e-8:
+#             break
+
+#         new_solution = np.copy(current_solution)
+#         i, j = np.random.choice(n-1, size=2, replace=False)
+#         new_solution[i], new_solution[j] = new_solution[j], new_solution[i]
+
+#         temp_new = np.insert(new_solution, 0, 0)  # Start at node 0
+#         temp_new = np.append(new_solution, 0)
+#         new_cost = calculate_cost(temp_new, tsp_matrix)
+
+#         if acceptance_probability(current_cost, new_cost, temp) > np.random.rand():
+#             current_solution = new_solution
+#             current_cost = new_cost
+
+#             if current_cost < best_cost:
+#                 best_solution = np.copy(current_solution)
+#                 best_cost = current_cost
+
+#         temp = temperature_schedule(iteration + 1, initial_temp)
+
+#     best_solution = np.insert(best_solution, 0, 0)  # Start at node 0
+#     best_solution = np.append(best_solution, 0)  # End at node 0
+#     return best_solution, best_cost
+
+def simulated_annealing(tsp_matrix, initial_temp=0.1, max_iterations=10000, target_cost=None):
     n = tsp_matrix.shape[0]
-    current_solution = np.random.permutation(n-1) + 1
-    #make it start and end at 0
-    temp = np.insert(current_solution, 0, 0)  # Start at node 0
-    temp = np.append(current_solution, 0)  # End at node 0
-    current_cost = calculate_cost(temp, tsp_matrix)
+    current_solution = np.random.permutation(n - 1) + 1
+    current_solution = np.insert(current_solution, 0, 0)
+    current_solution = np.append(current_solution, 0)
+    current_cost = calculate_cost(current_solution, tsp_matrix)
 
     best_solution = np.copy(current_solution)
     best_cost = current_cost
+    best_iteration = 0
 
     temp = temperature_schedule(0, initial_temp)
 
@@ -44,13 +83,13 @@ def simulated_annealing(tsp_matrix, initial_temp=0.1, max_iterations=10000):
         if temp <= 1e-8:
             break
 
-        new_solution = np.copy(current_solution)
-        i, j = np.random.choice(n-1, size=2, replace=False)
+        new_solution = np.copy(current_solution[1:-1])
+        i, j = np.random.choice(n - 1, size=2, replace=False)
         new_solution[i], new_solution[j] = new_solution[j], new_solution[i]
+        new_solution = np.insert(new_solution, 0, 0)
+        new_solution = np.append(new_solution, 0)
 
-        temp_new = np.insert(new_solution, 0, 0)  # Start at node 0
-        temp_new = np.append(new_solution, 0)
-        new_cost = calculate_cost(temp_new, tsp_matrix)
+        new_cost = calculate_cost(new_solution, tsp_matrix)
 
         if acceptance_probability(current_cost, new_cost, temp) > np.random.rand():
             current_solution = new_solution
@@ -59,12 +98,16 @@ def simulated_annealing(tsp_matrix, initial_temp=0.1, max_iterations=10000):
             if current_cost < best_cost:
                 best_solution = np.copy(current_solution)
                 best_cost = current_cost
+                best_iteration = iteration + 1
+
+                if target_cost is not None and best_cost <= target_cost:
+                    print(f"Target cost {target_cost} reached at iteration {best_iteration}")
+                    break
 
         temp = temperature_schedule(iteration + 1, initial_temp)
 
-    best_solution = np.insert(best_solution, 0, 0)  # Start at node 0
-    best_solution = np.append(best_solution, 0)  # End at node 0
-    return best_solution, best_cost
+    return best_solution, best_cost, best_iteration
+
 
 def artificial_tsp_matrix(n):
     angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
@@ -110,14 +153,16 @@ def plot_coordinates(coordinates):
     plt.show()
 
 if __name__ == "__main__":
-  # tsp_matrix_circle, coordinates_circle = artificial_tsp_matrix(20)
-  # best_solution, best_cost = simulated_annealing(tsp_matrix_circle)
-  # print("Best solution (circle):", best_solution)
-  # print("Best cost (circle):", best_cost)
-  # plot_solution(tsp_matrix_circle, best_solution, coordinates_circle)
+#   tsp_matrix_circle, coordinates_circle = artificial_tsp_matrix(20)
+#   best_solution, best_cost = simulated_annealing(tsp_matrix_circle)
+#   print("Best solution (circle):", best_solution)
+#   print("Best cost (circle):", best_cost)
+#   plot_solution(tsp_matrix_circle, best_solution, coordinates_circle)
 
   tsp_matrix = np.loadtxt("cost.csv", delimiter=",")
-  best_solution, best_cost = simulated_annealing(tsp_matrix)
+  target_cost = 873
+  best_solution, best_cost, best_iteration = simulated_annealing(tsp_matrix, target_cost=target_cost)
   print("Best solution:", best_solution)
   print("Best cost:", best_cost)
+  print("Best cost found at iteration:", best_iteration)
   plot_solution(tsp_matrix, best_solution)

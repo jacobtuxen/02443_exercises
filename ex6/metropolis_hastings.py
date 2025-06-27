@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from scipy.stats import chisquare
+import scipy.stats as st
 
 def random_walk_proposal(current_state):
     """Generates a new state by adding a small random step to the current state."""
@@ -29,9 +30,14 @@ def metropolis_hastings(target_dist, proposal_dist, initial_state, num_samples, 
 
     return samples
 
-def truncated_poisson(c, A, i):
+def P(i):
+    i = int(i)
+    while (i>=0) and (i<=10):
+        return A**i / math.factorial(i)
+
+def truncated_poisson(c, A, i, m):
     i = int(i)  # Ensure i is an integer
-    if i < 0:
+    if i < 0 or i > m:
         return 0.0  # Return 0 for negative indices
     return c * A**i / math.factorial(i)
 
@@ -45,22 +51,21 @@ def target_distribution_joint(c, A, i, j):
     
 if __name__ == "__main__":
     # Example parameters
-    A = 2.0
-    c = 1
+    A = 8.0 
+    m = 10
+    c = 1 / np.sum([P(i) for i in range(0, m+1)])
     
     num_samples = 30000
     burn_in = int(0.3 * num_samples)
     initial_state = 0
-    target_dist = lambda i: truncated_poisson(c, A, i)
+    target_dist = lambda i: truncated_poisson(c, A, i, m)
     samples = metropolis_hastings(target_dist, discrete_walk_proposal, initial_state, num_samples)
-    samples = samples[burn_in:]
+    samples = samples[burn_in::10]
     #test with chi-squared test
-    
-    observed_counts, _ = np.histogram(samples, bins=np.arange(0, max(samples)))
-    
-    max_k = int(samples.max())
-    target_probs = np.array([truncated_poisson(c, A, i) for i in range(max_k-1)])
-    target_probs /= target_probs.sum()
+    samples = np.clip(np.round(samples), 0, m).astype(int)
+    observed_counts = np.array([np.sum(samples == i) for i in range(m + 1)])
+
+    target_probs = np.array([truncated_poisson(c, A, i, m) for i in range(m + 1)])
     expected_counts = target_probs * observed_counts.sum()
     chi2_stat, p_value = chisquare(observed_counts, expected_counts)
     print(f"Chi-squared statistic: {chi2_stat}, p-value: {p_value}")
@@ -68,8 +73,8 @@ if __name__ == "__main__":
 
     #histogram of samples
     import matplotlib.pyplot as plt
-    plt.hist(samples, bins=30, density=True, alpha=0.6, color='g')
-    plt.title(f'MCMC Samples from Truncated Possion (c={c}, A={A})')
+    plt.hist(samples, bins=10, density=True, alpha=0.6, color='g')
+    plt.title(f'MCMC Samples from Truncated Poisson (c={c:.6f}, A={A})')
     plt.xlabel('Sample Value')
     plt.ylabel('Density')
     plt.savefig('mcmc_truncated_poisson.png')

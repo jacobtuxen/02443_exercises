@@ -1,6 +1,6 @@
-# from estimate import monte_carlo_estimator
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 
 def h(x):
     return np.exp(x)
@@ -28,34 +28,71 @@ def importance_sampling(lambda_val, sample_size=1000):
     return integral_estimate, variance_estimate
 
 
-sample_size = 1000
+if __name__ == "__main__":
+    # Parameters
+    TRUE_VALUE = np.exp(1) - 1
+    THEORETICAL_LAMBDA = 1.3548
+    num_iterations = 100
+    sample_size = 1000
+    lambda_values = np.linspace(0.1, 2.5, 100)
 
-lambda_values = np.linspace(0.1, 2.5, 100)
-variances = []
+    lambdas = []
+    all_variances = []
 
-for lam in lambda_values:
-    _, var = importance_sampling(sample_size=sample_size, lambda_val=lam)
-    variances.append(var)
+    # Main simulation loop
+    for i in range(num_iterations):
+        variances = []
+        for lam in lambda_values:
+            _, var = importance_sampling(sample_size=sample_size, lambda_val=lam)
+            variances.append(var)
+        
+        all_variances.append(variances)
 
-min_variance_index = np.argmin(variances)
-simulated_optimal_lambda = lambda_values[min_variance_index]
-min_variance = variances[min_variance_index]
+        # Find lambda with minimum variance in this iteration
+        min_variance_index = np.argmin(variances)
+        simulated_optimal_lambda = lambda_values[min_variance_index]
+        lambdas.append(simulated_optimal_lambda)
 
-print(f"True value of the integral: {TRUE_VALUE:.5f}\n")
-print(f"Theoretical optimal lambda ≈ 1.3548")
-print(f"Simulated optimal lambda: {simulated_optimal_lambda:.3f}\n")
-print(f"Minimum variance with Importance Sampling (at λ={simulated_optimal_lambda:.2f}): {min_variance:.5f}")
+    # Convert results to numpy arrays
+    lambdas = np.array(lambdas)
+    all_variances = np.array(all_variances)  # Shape: (num_iterations, len(lambda_values))
 
+    # Compute mean and confidence interval of simulated optimal lambdas
+    mean_lambda = np.mean(lambdas)
+    std_lambda = np.std(lambdas, ddof=1)
+    conf_int = stats.t.interval(0.95, df=num_iterations - 1, loc=mean_lambda, scale=std_lambda / np.sqrt(num_iterations))
 
-plt.style.use('seaborn-v0_8-whitegrid')
-plt.figure(figsize=(10, 6))
-plt.plot(lambda_values, variances, label='Importance Sampling Variance')
-plt.axvline(x=simulated_optimal_lambda, color='g', linestyle=':', label=f'Simulated Optimal λ ({simulated_optimal_lambda:.2f})')
-plt.axvline(x=1.3548, color='r', linestyle=':', label=f'Calculated Optimal λ (1.3548)')
-plt.title('Variance of Importance Sampling vs. λ')
-plt.xlabel('λ (lambda)')
-plt.ylabel('Variance')
-plt.legend()
-plt.ylim(0, min(20, max(variances))) # Cap y-axis for better visualization
-plt.savefig('ex5/figures/IS_exercise_5_8.png', dpi=300, bbox_inches='tight')
-plt.show()
+    print(f"Mean of simulated optimal lambdas: {mean_lambda:.4f}")
+    print(f"95% Confidence Interval: ({conf_int[0]:.4f}, {conf_int[1]:.4f})")
+
+    # Histogram of simulated optimal lambdas
+    plt.figure(figsize=(8, 5))
+    plt.hist(lambdas, bins=15, edgecolor='black', alpha=0.7)
+    plt.axvline(mean_lambda, color='blue', linestyle='--', label=f'Mean λ = {mean_lambda:.3f}')
+    plt.axvline(THEORETICAL_LAMBDA, color='red', linestyle=':', label='Theoretical λ = 1.3548')
+    plt.title("Distribution of Simulated Optimal λ")
+    plt.xlabel("Lambda")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('ex5/figures/lambda_distribution.png', dpi=300)
+    plt.show()
+
+    # Mean variance curve
+    mean_variance_curve = np.mean(all_variances, axis=0)
+    lambda_min_mean_variance_index = np.argmin(mean_variance_curve)
+    lambda_min_mean_variance = lambda_values[lambda_min_mean_variance_index]
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    plt.figure(figsize=(10, 6))
+    plt.plot(lambda_values, mean_variance_curve, label='Mean IS Variance Across Iterations', color='blue')
+    plt.axvline(x=mean_lambda, color='green', linestyle='--', label=f'Mean Optimal λ ≈ {mean_lambda:.3f}')
+    plt.axvline(x=THEORETICAL_LAMBDA, color='red', linestyle=':', label='Theoretical λ = 1.3548')
+    plt.axvline(x=lambda_min_mean_variance, color='purple', linestyle='-.', label=f'Min Mean-Variance λ ≈ {lambda_min_mean_variance:.3f}')
+    plt.title('Mean Variance of Importance Sampling vs. λ (across simulations)')
+    plt.xlabel('λ (lambda)')
+    plt.ylabel('Mean Variance')
+    plt.legend()
+    plt.ylim(0, min(20, max(mean_variance_curve)))  # Limit y-axis for visibility
+    plt.savefig('ex5/figures/IS_mean_variance_curve.png', dpi=300, bbox_inches='tight')
+    plt.show()

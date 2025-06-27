@@ -82,9 +82,11 @@ if __name__ == "__main__":
         theta2 = BlockingSystem(arrival_mode='hyperexponential')
         num_blocked_2, num_served_2 = theta2.simulate()
 
-        theta1_ncr = BlockingSystem(arrival_mode='poisson', predfined_random_numbers=U.tolist())
+        # theta1_ncr = BlockingSystem(arrival_mode='poisson', predfined_random_numbers=U.tolist())
+        theta1_ncr = BlockingSystem(arrival_mode='poisson', predfined_random_numbers=U.copy())
         num_blocked_1_ncr, num_served_1_ncr = theta1_ncr.simulate()
-        theta2_ncr = BlockingSystem(arrival_mode='hyperexponential', predfined_random_numbers=U.tolist())
+        # theta2_ncr = BlockingSystem(arrival_mode='hyperexponential', predfined_random_numbers=U.tolist())
+        theta2_ncr = BlockingSystem(arrival_mode='hyperexponential', predfined_random_numbers=U.copy())
         num_blocked_2_ncr, num_served_2_ncr = theta2_ncr.simulate()
         fraction_blocked_1_ncr = num_blocked_1_ncr / (num_blocked_1_ncr + num_served_1_ncr)
         fraction_blocked_2_ncr = num_blocked_2_ncr / (num_blocked_2_ncr + num_served_2_ncr)

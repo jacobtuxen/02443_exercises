@@ -21,7 +21,7 @@ if __name__ == "__main__":
     chi_square = chi_square_test(observed, expected, num_bins=num_bins, verbose=True)
     d = kolmogorov_smirnov_test(U, np.linspace(0,1,n), verbose=True)
     runs_above, runs_below, median = run_test(U, verbose=True)
-    c_h = correlation_coefficient(U, verbose=True)
+    c_h = correlation_coefficient(U, verbose=True, h=len(U) // 2)
 
     if True:  # Set to True to enable plotting
       #scatter plot U_i+1 vs U_i
